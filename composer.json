@@ -1,0 +1,25 @@
+{
+    "name": "kayw/quality-hook-installer",
+    "description": "Install an execute script of specify quality tools to your git pre-commit hook, and it executes only for changed files",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Kayw\\QualityHook\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Kay Wei",
+            "email": "weikaiii@sina.cn"
+        }
+    ],
+    "require": {
+        "symfony/console": "^6.0.0"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer":"*",
+        "phpstan/phpstan":"*"
+    },
+    "bin": ["quality"]
+}
