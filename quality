@@ -1,0 +1,13 @@
+#!/usr/bin/env php
+<?php
+
+require __DIR__ . '/../../autoload.php';
+
+use Kayw\QualityHook\Command\RunCommand;
+use Symfony\Component\Console\Application;
+
+$application = new Application();
+
+$application->add(new RunCommand());
+
+$application->run();
