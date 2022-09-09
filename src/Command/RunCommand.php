@@ -23,6 +23,9 @@ class RunCommand extends Command
         '.php-cs-fixer.php',
         '.php-cs-fixer.dist.php',
     ];
+    private const PHPCSFIXER_BIN_NAME = 'php-cs-fixer';
+    private const PHPSTAN_BIN_NAME    = 'phpstan';
+
     private string $phpCsFixerConfig;
 
     protected function configure(): void
@@ -46,12 +49,15 @@ class RunCommand extends Command
         };
     }
 
+    private function checkBinInstall(string $bin_name): bool
+    {
+        return file_exists($this->getPath() .'/vendor/bin/'. $bin_name);
+    }
+
     private function checkPhpCsFixerConfigFileExist(): bool
     {
-        $base_path = $this->getPath();
-
         foreach (self::PHPCSFIXER_CONFIG_FILES as $config_file) {
-            if (file_exists($base_path . '/' . $config_file)) {
+            if (file_exists($this->getPath() . '/' . $config_file)) {
                 $this->phpCsFixerConfig = $config_file;
 
                 return true;
@@ -116,17 +122,20 @@ class RunCommand extends Command
 
     private function runPhpCsFixerFix(OutputInterface $output, string $change_files_string): int
     {
+        if (!$this->checkBinInstall(self::PHPCSFIXER_BIN_NAME)) {
+            $output->writeln("<error> The PHPCsFixer packages not install in your project</error>");
+        }
         if (!$this->checkPhpCsFixerConfigFileExist()) {
-            $output->writeln('<error> The PHPCSFixer config file not found on your project </error>');
+            $output->writeln('<error> The PHPCsFixer config file not found on your project </error>');
 
             return self::FAILURE;
         }
 
-        $output->writeln('<info> PHP CS Fixer Fixing ... </info>');
+        $output->writeln('<info> PHP Cs Fixer Fixing ... </info>');
         $base_path = $this->getPath();
         exec("$base_path/vendor/bin/php-cs-fixer fix --config $base_path/$this->phpCsFixerConfig $change_files_string", $execute_output, $result_code);
 
-        if (count($execute_output) > 0){
+        if ($execute_output[0] !== '') {
             return self::FAILURE;
         }
 
@@ -135,6 +144,10 @@ class RunCommand extends Command
 
     private function runPhpStanFix(OutputInterface $output, string $change_files_string): int
     {
+        if (!$this->checkBinInstall(self::PHPSTAN_BIN_NAME)) {
+            $output->writeln("<error> The PHPStan packages not install in your project</error>");
+        }
+
         $output->writeln('<info> PHPStan analysing ... </info>');
         $base_path = $this->getPath();
         exec("$base_path/vendor/bin/phpstan analyse --debug -v --memory-limit 2048M $change_files_string", $phpstan_outputs, $result_code);
