@@ -134,11 +134,10 @@ class RunCommand extends Command
         $output->writeln('<info> PHP Cs Fixer Fixing ... </info>');
         $base_path = $this->getPath();
         exec("$base_path/vendor/bin/php-cs-fixer fix --config $base_path/$this->phpCsFixerConfig $change_files_string", $execute_output, $result_code);
-
-        if (!$execute_output == []) {
+        if ($execute_output !== [] && $execute_output[0] !== '') {
             return self::FAILURE;
         }
-
+        
         return $result_code;
     }
 
