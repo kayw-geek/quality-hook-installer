@@ -67,19 +67,24 @@ class RunCommand extends Command
         return false;
     }
 
-    private function executeRun(array $active_options, InputInterface $input, OutputInterface $output): int
+    private static function getChangedFilesString():?string
     {
         exec('git status -v', $exec_output);
 
         if ($exec_output === '') {
-            return self::SUCCESS;
+            return null;
         }
 
-        $change_files_string = implode(' ', array_map(function (string $output_line): string {
+        return implode(' ', array_map(function (string $output_line): string {
             return trim(substr($output_line, 2));
-        }, array_filter($exec_output, fn (string $output_line) => !str_starts_with($output_line, 'D'))));
+        }, array_filter($exec_output, fn (string $output_line) => !str_starts_with($output_line, ' M'))));
 
-        if ($change_files_string === '') {
+    }
+    private function executeRun(array $active_options, InputInterface $input, OutputInterface $output): int
+    {
+         $changed_files_string = self::getChangedFilesString();
+
+        if ($changed_files_string === null) {
             return self::SUCCESS;
         }
 
@@ -97,8 +102,8 @@ class RunCommand extends Command
 
         foreach ($active_options as $active_option) {
             $result_code += match ($active_option) {
-                self::OPTION_PHP_FIXER => $this->runPhpCsFixerFix($output, $change_files_string),
-                self::OPTION_PHPSTAN   => $this->runPhpStanFix($output, $change_files_string),
+                self::OPTION_PHP_FIXER => $this->runPhpCsFixerFix($output, $changed_files_string),
+                self::OPTION_PHPSTAN   => $this->runPhpStanFix($output, $changed_files_string),
             };
         }
 
@@ -134,11 +139,11 @@ class RunCommand extends Command
         $output->writeln('<info> PHP Cs Fixer Fixing ... </info>');
         $base_path = $this->getPath();
         exec("$base_path/vendor/bin/php-cs-fixer fix --config $base_path/$this->phpCsFixerConfig $change_files_string", $execute_output, $result_code);
-
-        if (!$execute_output == []) {
+        if ($execute_output !== [] && $execute_output[0] !== '') {
+            $output->writeln('<error> Some Files have fixed, please re-commit these changes</error>');
             return self::FAILURE;
         }
-
+        
         return $result_code;
     }
 
