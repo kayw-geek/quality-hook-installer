@@ -69,7 +69,7 @@ class RunCommand extends Command
 
     private static function getChangedFilesString(): ?string
     {
-        exec("git status -s | grep '^ M' | grep -v '^ D' | awk '{print $2}'", $exec_output);
+        exec("git status -s | grep -v 'D' | awk '{print $2}'", $exec_output);
 
         if ($exec_output === '') {
             return null;
