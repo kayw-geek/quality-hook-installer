@@ -45,13 +45,13 @@ class RunCommand extends Command
         return match ($input->getArguments() !== []) {
             $input->getArgument(self::ARGUMENT_INSTALL) !== null   => $this->executeInstall($active_options, $input, $output),
             $input->getArgument(self::ARGUMENT_UNINSTALL) !== null => $this->executeUninstall($input, $output),
-            default                                                => $this->executeRun($active_options, $input, $output)
+            default                                                => $this->executeRun($active_options, $input, $output),
         };
     }
 
     private function checkBinInstall(string $bin_name): bool
     {
-        return file_exists($this->getPath() .'/vendor/bin/'. $bin_name);
+        return file_exists($this->getPath() . '/vendor/bin/' . $bin_name);
     }
 
     private function checkPhpCsFixerConfigFileExist(): bool
@@ -67,22 +67,20 @@ class RunCommand extends Command
         return false;
     }
 
-    private static function getChangedFilesString():?string
+    private static function getChangedFilesString(): ?string
     {
-        exec('git status -v', $exec_output);
+        exec("git status -s | grep '^ M' | grep -v '^ D' | awk '{print $2}'", $exec_output);
 
         if ($exec_output === '') {
             return null;
         }
 
-        return implode(' ', array_map(function (string $output_line): string {
-            return trim(substr($output_line, 2));
-        }, array_filter($exec_output, fn (string $output_line) => !str_starts_with($output_line, ' M'))));
-
+        return implode(' ', $exec_output);
     }
+
     private function executeRun(array $active_options, InputInterface $input, OutputInterface $output): int
     {
-         $changed_files_string = self::getChangedFilesString();
+        $changed_files_string = self::getChangedFilesString();
 
         if ($changed_files_string === null) {
             return self::SUCCESS;
@@ -128,29 +126,35 @@ class RunCommand extends Command
     private function runPhpCsFixerFix(OutputInterface $output, string $change_files_string): int
     {
         if (!$this->checkBinInstall(self::PHPCSFIXER_BIN_NAME)) {
-            $output->writeln("<error> The PHPCsFixer packages not install in your project</error>");
+            $output->writeln('<error> The PHPCsFixer packages not install in your project</error>');
+
             return self::FAILURE;
         }
+
         if (!$this->checkPhpCsFixerConfigFileExist()) {
             $output->writeln('<error> The PHPCsFixer config file not found on your project </error>');
+
             return self::FAILURE;
         }
 
         $output->writeln('<info> PHP Cs Fixer Fixing ... </info>');
         $base_path = $this->getPath();
         exec("$base_path/vendor/bin/php-cs-fixer fix --config $base_path/$this->phpCsFixerConfig $change_files_string", $execute_output, $result_code);
+
         if ($execute_output !== [] && $execute_output[0] !== '') {
             $output->writeln('<error> Some Files have fixed, please re-commit these changes</error>');
+
             return self::FAILURE;
         }
-        
+
         return $result_code;
     }
 
     private function runPhpStanFix(OutputInterface $output, string $change_files_string): int
     {
         if (!$this->checkBinInstall(self::PHPSTAN_BIN_NAME)) {
-            $output->writeln("<error> The PHPStan packages not install in your project</error>");
+            $output->writeln('<error> The PHPStan packages not install in your project</error>');
+
             return self::FAILURE;
         }
 
@@ -173,7 +177,7 @@ class RunCommand extends Command
 
     private function executeInstall(array $active_options, InputInterface $input, OutputInterface $output): int
     {
-        $option_text = implode(' ', array_map(fn (string $active_option): string => '--' . $active_option, $active_options));
+        $option_text     = implode(' ', array_map(fn (string $active_option): string => '--' . $active_option, $active_options));
         $execute_command = <<<EOF
             #!/bin/bash
             exec </dev/tty
