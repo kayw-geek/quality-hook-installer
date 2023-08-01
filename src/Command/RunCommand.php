@@ -71,10 +71,6 @@ class RunCommand extends Command
     {
         exec("git status -s | grep -v 'D' | awk '{print $2}'", $exec_output);
 
-        if ($exec_output === '') {
-            return null;
-        }
-
         return implode(' ', $exec_output);
     }
 
@@ -82,7 +78,7 @@ class RunCommand extends Command
     {
         $changed_files_string = self::getChangedFilesString();
 
-        if ($changed_files_string === null) {
+        if ($changed_files_string === '') {
             return self::SUCCESS;
         }
 
@@ -126,18 +122,18 @@ class RunCommand extends Command
     private function runPhpCsFixerFix(OutputInterface $output, string $change_files_string): int
     {
         if (!$this->checkBinInstall(self::PHPCSFIXER_BIN_NAME)) {
-            $output->writeln('<error> The PHPCsFixer packages not install in your project</error>');
+            $output->writeln('<error> The PHPCSFixer packages not install in your project</error>');
 
             return self::FAILURE;
         }
 
         if (!$this->checkPhpCsFixerConfigFileExist()) {
-            $output->writeln('<error> The PHPCsFixer config file not found on your project </error>');
+            $output->writeln('<error> The PHPCSFixer config file not found on your project </error>');
 
             return self::FAILURE;
         }
 
-        $output->writeln('<info> PHP Cs Fixer Fixing ... </info>');
+        $output->writeln('<info> PHP CS Fixer Fixing ... </info>');
         $base_path = $this->getPath();
         exec("$base_path/vendor/bin/php-cs-fixer fix --config $base_path/$this->phpCsFixerConfig $change_files_string", $execute_output, $result_code);
 
