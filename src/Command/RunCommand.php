@@ -31,9 +31,9 @@ class RunCommand extends Command
     protected function configure(): void
     {
         $this->setDescription('Put code quality inspection to git hook');
-        $this->setHelp('Install an execute script of specify quality tools to your git pre-add hook, and it executes only for changed files');
-        $this->addArgument(self::ARGUMENT_INSTALL, InputArgument::OPTIONAL, 'Install a execute script of specify quality tools to your git per-add hook');
-        $this->addArgument(self::ARGUMENT_UNINSTALL, InputArgument::OPTIONAL, 'Uninstall a execute script of specify quality tools to your git per-add hook');
+        $this->setHelp('Install an execute script of specify quality tools to your git pre-commit hook, and it executes only for changed files');
+        $this->addArgument(self::ARGUMENT_INSTALL, InputArgument::OPTIONAL, 'Install a execute script of specify quality tools to your git per-commit hook');
+        $this->addArgument(self::ARGUMENT_UNINSTALL, InputArgument::OPTIONAL, 'Uninstall a execute script of specify quality tools to your git per-commit hook');
         $this->addOption(self::OPTION_PHPSTAN, '', InputOption::VALUE_NONE);
         $this->addOption(self::OPTION_PHP_FIXER, '', InputOption::VALUE_NONE);
     }
@@ -69,7 +69,7 @@ class RunCommand extends Command
 
     private static function getChangedFilesString(): ?string
     {
-        exec('git diff --name-only --diff-filter=M', $exec_output);
+        exec('git diff --name-only HEAD --diff-filter=M', $exec_output);
 
         return implode(' ', $exec_output);
     }
@@ -179,7 +179,7 @@ class RunCommand extends Command
             exec </dev/tty
             eval "quality run $option_text"
             EOF;
-        file_put_contents($this->getPath() . '/.git/hooks/pre-add', $execute_command);
+        file_put_contents($this->getPath() . '/.git/hooks/pre-commit', $execute_command);
         $output->writeln('<info> The hook install success! </info>');
 
         return self::SUCCESS;
